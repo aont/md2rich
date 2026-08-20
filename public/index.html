@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown → Rich Text Clipboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { margin-top: 0; font-size: 24px; }
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 16px;
+      resize: vertical;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: white;
+    }
+    .buttons { display: flex; gap: 8px; margin: 12px 0 24px; }
+    button {
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #copyButton { background: #222; color: white; }
+    #clearButton { background: #ddd; color: #222; }
+    #status { min-height: 24px; margin-bottom: 12px; font-size: 14px; }
+    .preview-wrapper {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 24px;
+    }
+    .preview-wrapper h2 { margin-top: 0; font-size: 16px; color: #666; }
+    #preview { line-height: 1.6; }
+    #preview pre {
+      overflow-x: auto;
+      padding: 12px;
+      background: #f4f4f4;
+      border-radius: 6px;
+    }
+    #preview code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    #preview blockquote {
+      margin-left: 0;
+      padding-left: 16px;
+      border-left: 4px solid #ccc;
+      color: #666;
+    }
+    #preview table { border-collapse: collapse; }
+    #preview th, #preview td { padding: 6px 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Markdown → Rich Text Clipboard</h1>
+
+    <textarea id="markdown" placeholder="input markdown here"></textarea>
+
+    <div class="buttons">
+      <button id="copyButton">Copy as rich text</button>
+      <button id="clearButton">Clear</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="preview-wrapper">
+      <h2>Preview</h2>
+      <div id="preview"></div>
+    </div>
+  </div>
+
+  <script>
+    const markdownInput = document.getElementById("markdown");
+    const preview = document.getElementById("preview");
+    const copyButton = document.getElementById("copyButton");
+    const clearButton = document.getElementById("clearButton");
+    const status = document.getElementById("status");
+
+    marked.setOptions({
+      gfm: true,
+      breaks: false
+    });
+
+    function markdownToHtml(markdown) {
+      return marked.parse(markdown);
+    }
+
+    function updatePreview() {
+      preview.innerHTML = markdownToHtml(markdownInput.value);
+    }
+
+    async function copyAsRichText() {
+      const markdown = markdownInput.value;
+      const html = markdownToHtml(markdown);
+
+      try {
+        if (
+          navigator.clipboard &&
+          typeof ClipboardItem !== "undefined" &&
+          navigator.clipboard.write
+        ) {
+          const clipboardItem = new ClipboardItem({
+            "text/html": new Blob(
+              [createClipboardHtml(html)],
+              { type: "text/html" }
+            ),
+            "text/plain": new Blob(
+              [markdown],
+              { type: "text/plain" }
+            )
+          });
+
+          await navigator.clipboard.write([clipboardItem]);
+          showStatus("Copy as rich textしました。");
+          return;
+        }
+
+        fallbackCopy(html);
+        showStatus("Copy as rich textしました。");
+      } catch (error) {
+        console.error(error);
+        showStatus("Copy failed: " + error.message, true);
+      }
+    }
+
+    function createClipboardHtml(content) {
+      return `
+        <!doctype html>
+        <html>
+          <body>
+            ${content}
+          </body>
+        </html>
+      `;
+    }
+
+    function fallbackCopy(html) {
+      const container = document.createElement("div");
+      container.contentEditable = "true";
+      container.style.position = "fixed";
+      container.style.left = "-9999px";
+      container.innerHTML = html;
+
+      document.body.appendChild(container);
+
+      const range = document.createRange();
+      range.selectNodeContents(container);
+
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      const success = document.execCommand("copy");
+
+      selection.removeAllRanges();
+      container.remove();
+
+      if (!success) {
+        throw new Error("The browser rejected the copy operation");
+      }
+    }
+
+    function showStatus(message, isError = false) {
+      status.textContent = message;
+      status.style.color = isError ? "#b00020" : "#18794e";
+
+      setTimeout(() => {
+        status.textContent = "";
+      }, 3000);
+    }
+
+    markdownInput.addEventListener("input", updatePreview);
+    copyButton.addEventListener("click", copyAsRichText);
+    clearButton.addEventListener("click", () => {
+      markdownInput.value = "";
+      updatePreview();
+      markdownInput.focus();
+    });
+
+    updatePreview();
+  </script>
+</body>
+</html>
