@@ -185,6 +185,7 @@
       }, 3000);
     }
 
+    window.addEventListener("pageshow", updatePreview);
     markdownInput.addEventListener("input", updatePreview);
     copyButton.addEventListener("click", copyAsRichText);
     clearButton.addEventListener("click", () => {
