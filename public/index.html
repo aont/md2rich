@@ -28,7 +28,7 @@
       font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       background: white;
     }
-    .buttons { display: flex; gap: 8px; margin: 12px 0 24px; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 24px; }
     button {
       padding: 10px 16px;
       border: 0;
@@ -37,6 +37,7 @@
       font-size: 14px;
     }
     #copyButton { background: #222; color: white; }
+    #copyJavaScriptButton { background: #3157a4; color: white; }
     #clearButton { background: #ddd; color: #222; }
     #status { min-height: 24px; margin-bottom: 12px; font-size: 14px; }
     .preview-wrapper {
@@ -74,6 +75,7 @@
 
     <div class="buttons">
       <button id="copyButton">Copy as rich text</button>
+      <button id="copyJavaScriptButton">Copy JavaScript</button>
       <button id="clearButton">Clear</button>
     </div>
 
@@ -89,6 +91,7 @@
     const markdownInput = document.getElementById("markdown");
     const preview = document.getElementById("preview");
     const copyButton = document.getElementById("copyButton");
+    const copyJavaScriptButton = document.getElementById("copyJavaScriptButton");
     const clearButton = document.getElementById("clearButton");
     const status = document.getElementById("status");
 
@@ -139,6 +142,32 @@
       }
     }
 
+    function createPromptJavaScript(html) {
+      const serializedHtml = JSON.stringify(html)
+        .replace(/\u2028/g, "\\u2028")
+        .replace(/\u2029/g, "\\u2029");
+
+      return `(()=>{const e=document.querySelector("#prompt-textarea"),h=${serializedHtml};if(!e)throw new Error("#prompt-textarea not found");e.focus();if(e instanceof HTMLTextAreaElement||e instanceof HTMLInputElement){const s=e.selectionStart??e.value.length;e.setRangeText(h,s,e.selectionEnd??s,"end")}else{e.insertAdjacentHTML("beforeend",h)}e.dispatchEvent(new InputEvent("input",{bubbles:true,inputType:"insertText",data:null}))})()`;
+    }
+
+    async function copyJavaScript() {
+      const javascript = createPromptJavaScript(
+        markdownToHtml(markdownInput.value)
+      );
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(javascript);
+        } else {
+          fallbackCopyText(javascript);
+        }
+        showStatus("Minified JavaScript copied.");
+      } catch (error) {
+        console.error(error);
+        showStatus("Copy failed: " + error.message, true);
+      }
+    }
+
     function createClipboardHtml(content) {
       return `
         <!doctype html>
@@ -176,6 +205,22 @@
       }
     }
 
+    function fallbackCopyText(text) {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+
+      const success = document.execCommand("copy");
+      textarea.remove();
+
+      if (!success) {
+        throw new Error("The browser rejected the copy operation");
+      }
+    }
+
     function showStatus(message, isError = false) {
       status.textContent = message;
       status.style.color = isError ? "#b00020" : "#18794e";
@@ -188,6 +233,7 @@
     window.addEventListener("pageshow", updatePreview);
     markdownInput.addEventListener("input", updatePreview);
     copyButton.addEventListener("click", copyAsRichText);
+    copyJavaScriptButton.addEventListener("click", copyJavaScript);
     clearButton.addEventListener("click", () => {
       markdownInput.value = "";
       updatePreview();

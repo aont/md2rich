@@ -7,6 +7,7 @@
 - Live Markdown preview
 - GitHub Flavored Markdown support, including tables and task lists
 - Rich-text clipboard output (`text/html`)
+- Minified JavaScript output that appends the generated HTML to `#prompt-textarea`
 - Plain-text Markdown clipboard fallback (`text/plain`)
 - Compatibility fallback for browsers without the modern Clipboard API
 - No build step or application server required
@@ -19,6 +20,11 @@
 3. Review the rendered result in the **Preview** section.
 4. Select **Copy as rich text**.
 5. Paste the result into an application that accepts formatted content.
+
+Alternatively, select **Copy JavaScript** to copy a minified script. Running that
+script on a page containing `#prompt-textarea` appends the generated HTML to the
+field and dispatches an `input` event so the host application can detect the
+change.
 
 Use **Clear** to remove the current Markdown and reset the preview.
 
