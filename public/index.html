@@ -8,13 +8,48 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
+    :root {
+      color-scheme: light dark;
+      --page-background: #f5f5f5;
+      --text-color: #222;
+      --surface-background: #fff;
+      --input-border: #ccc;
+      --preview-border: #ddd;
+      --muted-text: #666;
+      --code-background: #f4f4f4;
+      --primary-background: #222;
+      --primary-text: #fff;
+      --javascript-background: #3157a4;
+      --secondary-background: #ddd;
+      --secondary-text: #222;
+      --status-success: #18794e;
+      --status-error: #b00020;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page-background: #16181c;
+        --text-color: #e7e9ea;
+        --surface-background: #22252a;
+        --input-border: #555b65;
+        --preview-border: #454a52;
+        --muted-text: #aeb4bd;
+        --code-background: #181a1f;
+        --primary-background: #e7e9ea;
+        --primary-text: #181a1f;
+        --javascript-background: #527bd0;
+        --secondary-background: #454a52;
+        --secondary-text: #f2f3f5;
+        --status-success: #6bd89b;
+        --status-error: #ff8e9c;
+      }
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 24px;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f5f5;
-      color: #222;
+      background: var(--page-background);
+      color: var(--text-color);
     }
     .container { max-width: 1000px; margin: 0 auto; }
     h1 { margin-top: 0; font-size: 24px; }
@@ -23,10 +58,11 @@
       min-height: 300px;
       padding: 16px;
       resize: vertical;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      background: white;
+      background: var(--surface-background);
+      color: var(--text-color);
     }
     .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 24px; }
     button {
@@ -36,22 +72,22 @@
       cursor: pointer;
       font-size: 14px;
     }
-    #copyButton { background: #222; color: white; }
-    #copyJavaScriptButton { background: #3157a4; color: white; }
-    #clearButton { background: #ddd; color: #222; }
+    #copyButton { background: var(--primary-background); color: var(--primary-text); }
+    #copyJavaScriptButton { background: var(--javascript-background); color: #fff; }
+    #clearButton { background: var(--secondary-background); color: var(--secondary-text); }
     #status { min-height: 24px; margin-bottom: 12px; font-size: 14px; }
     .preview-wrapper {
-      background: white;
-      border: 1px solid #ddd;
+      background: var(--surface-background);
+      border: 1px solid var(--preview-border);
       border-radius: 8px;
       padding: 24px;
     }
-    .preview-wrapper h2 { margin-top: 0; font-size: 16px; color: #666; }
+    .preview-wrapper h2 { margin-top: 0; font-size: 16px; color: var(--muted-text); }
     #preview { line-height: 1.6; }
     #preview pre {
       overflow-x: auto;
       padding: 12px;
-      background: #f4f4f4;
+      background: var(--code-background);
       border-radius: 6px;
     }
     #preview code {
@@ -60,11 +96,11 @@
     #preview blockquote {
       margin-left: 0;
       padding-left: 16px;
-      border-left: 4px solid #ccc;
-      color: #666;
+      border-left: 4px solid var(--input-border);
+      color: var(--muted-text);
     }
     #preview table { border-collapse: collapse; }
-    #preview th, #preview td { padding: 6px 10px; border: 1px solid #ccc; }
+    #preview th, #preview td { padding: 6px 10px; border: 1px solid var(--input-border); }
   </style>
 </head>
 <body>
@@ -223,7 +259,7 @@
 
     function showStatus(message, isError = false) {
       status.textContent = message;
-      status.style.color = isError ? "#b00020" : "#18794e";
+      status.style.color = isError ? "var(--status-error)" : "var(--status-success)";
 
       setTimeout(() => {
         status.textContent = "";

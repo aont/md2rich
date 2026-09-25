@@ -5,6 +5,7 @@
 ## Features
 
 - Live Markdown preview
+- Automatic light/dark theme based on the operating system preference
 - GitHub Flavored Markdown support, including tables and task lists
 - Rich-text clipboard output (`text/html`)
 - Minified JavaScript output that appends the generated HTML to `#prompt-textarea`
